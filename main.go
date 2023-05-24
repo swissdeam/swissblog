@@ -61,6 +61,7 @@ type Contract_page struct {
 	Request_Content     string
 	Request_timestamp   string
 	Theme_name          string
+	Advertisers_id      int
 	Advertisers_name    string
 	Advertisers_Tel     string
 	Advertisers_email   string
@@ -232,7 +233,12 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 			list.Request_Name = request.Name
 			list.Request_Content = request.Content
 			list.Request_timestamp = request.Timestamp
+			list.Advertisers_id = request.Advertisers_id
 		}
+
+		// ad_res, err := db.Query(fmt.Sprintf("SELECT * FROM `advertisers` WHERE id = %d", contract.Advertisers_id))
+		// log.Println("Advertisers id from list", list.Advertisers_id)
+		// log.Println("Advertisers id from contract", contract.Advertisers_id)
 
 		mag_res, err := db.Query(fmt.Sprintf("SELECT * FROM `magazines` WHERE id = %d", contract.Magazines_id))
 		if err != nil {
@@ -283,7 +289,7 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 			list.Theme_name = theme.Name
 		}
 
-		ad_res, err := db.Query("SELECT * FROM `advertisers` ORDER BY id DESC LIMIT 1")
+		ad_res, err := db.Query(fmt.Sprintf("SELECT * FROM `advertisers` WHERE id = %d", contract.Advertisers_id))
 		if err != nil {
 			panic(err)
 		}
@@ -295,18 +301,21 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				panic(err)
 			}
-
-			list.Advertisers_name = advertiser.Name
 			list.Advertisers_Tel = advertiser.Tel
+			list.Advertisers_name = advertiser.Name
 			list.Advertisers_email = advertiser.Email
+			list.Advertisers_address = advertiser.Address
+
 		}
 
 		show = append(show, list)
-
 	}
+
+	log.Println("вывод контрактов до")
 
 	tmpl, _ := template.ParseFiles("src/contracts_page.html")
 	tmpl.Execute(w, show)
+	log.Println("вывод контрактов после")
 }
 
 func new_requests_page(w http.ResponseWriter, r *http.Request) {
@@ -384,9 +393,10 @@ func new_requests_page(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		defer insert.Close()
-		tmpl, _ := template.ParseFiles("src/requests_page.html")
-		log.Println("после элс")
-		tmpl.Execute(w, "")
+		defer http.Redirect(w, r, "/requests/", 301)
+		// tmpl, _ := template.ParseFiles("src/requests_page.html")
+		// log.Println("после элс")
+		// tmpl.Execute(w, "")
 
 	} else {
 		log.Println("элс")
@@ -546,6 +556,7 @@ func relevant_page(w http.ResponseWriter, r *http.Request) {
 }
 
 func new_contract_page(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	request_id, _ := strconv.Atoi(vars["request_id"])
 	theme_id, _ := strconv.Atoi(vars["theme_id"])
@@ -627,6 +638,7 @@ func new_contract_page(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
+		log.Println("пост метод после подтверждения")
 		err := r.ParseForm()
 		if err != nil {
 			log.Println(err)
@@ -661,11 +673,10 @@ func new_contract_page(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		insert.Close()
-		log.Println("insert")
-		// http.Redirect(w, r, "/contracts/", 200)
-		tmpl, _ := template.ParseFiles("src/contracts_page.html")
-		tmpl.Execute(w, show)
+		defer insert.Close()
+		log.Println("Insert")
+		defer http.Redirect(w, r, "/contracts/", 301)
+
 	} else {
 
 		show.Timestamp = time.Now().Format("2006-01-02 15:04:05")
