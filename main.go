@@ -108,7 +108,7 @@ func home_page(w http.ResponseWriter, r *http.Request) {
 }
 
 func advertisers_page(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
 		panic(err)
 	}
@@ -132,7 +132,7 @@ func advertisers_page(w http.ResponseWriter, r *http.Request) {
 }
 
 func magazines_page(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
 		panic(err)
 	}
@@ -156,7 +156,7 @@ func magazines_page(w http.ResponseWriter, r *http.Request) {
 }
 
 func requests_page(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
 		panic(err)
 	}
@@ -181,7 +181,7 @@ func requests_page(w http.ResponseWriter, r *http.Request) {
 }
 
 func contracts_page(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
 		panic(err)
 	}
@@ -213,7 +213,7 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 		list.Timestamp = contract.Timestamp
 		list.Amount = contract.Amount
 
-		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 		if err != nil {
 			panic(err)
 		}
@@ -321,7 +321,7 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 func new_requests_page(w http.ResponseWriter, r *http.Request) {
 	log.Println("вход в функцию")
 	var advertiser_id int
-	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
 		panic(err)
 	}
@@ -381,7 +381,7 @@ func new_requests_page(w http.ResponseWriter, r *http.Request) {
 		// 	log.Println("после условия цикле", i, abc, new_request.Theme_id)
 		// }
 		log.Println("прокинутые данные", new_request)
-		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 		if err != nil {
 			panic(err)
 		}
@@ -394,9 +394,6 @@ func new_requests_page(w http.ResponseWriter, r *http.Request) {
 		}
 		defer insert.Close()
 		defer http.Redirect(w, r, "/requests/", 301)
-		// tmpl, _ := template.ParseFiles("src/requests_page.html")
-		// log.Println("после элс")
-		// tmpl.Execute(w, "")
 
 	} else {
 		log.Println("элс")
@@ -423,7 +420,7 @@ func new_advertiser_page(w http.ResponseWriter, r *http.Request) {
 		new_advertiser.Address = r.FormValue("address")
 		log.Println(new_advertiser, new_advertiser.Name, r.FormValue("name"))
 
-		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 		if err != nil {
 			panic(err)
 		}
@@ -437,11 +434,13 @@ func new_advertiser_page(w http.ResponseWriter, r *http.Request) {
 		log.Println("do insert")
 		insert.Close()
 		log.Println("testing log")
-		tmpl, err := template.ParseFiles("src/new_request_page.html")
-		if err != nil {
-			panic(err)
-		}
-		tmpl.Execute(w, "")
+		// tmpl, err := template.ParseFiles("src/new_request_page.html")
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// tmpl.Execute(w, "")
+		defer http.Redirect(w, r, "/newrequest/", 301)
+
 	} else {
 		tmpl, _ := template.ParseFiles("src/new_advertiser_page.html")
 		tmpl.Execute(w, "")
@@ -449,7 +448,7 @@ func new_advertiser_page(w http.ResponseWriter, r *http.Request) {
 }
 
 func employes_page(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
 		panic(err)
 	}
@@ -476,7 +475,7 @@ func employes_page(w http.ResponseWriter, r *http.Request) {
 func choosen_request_page(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["request_id"]
-	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
 		panic(err)
 	}
@@ -508,7 +507,7 @@ func relevant_page(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["theme_id"]
 	int_request, _ := strconv.Atoi(vars["request_id"])
-	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
 		panic(err)
 	}
@@ -569,7 +568,7 @@ func new_contract_page(w http.ResponseWriter, r *http.Request) {
 	var advertiser Advertiser
 	var show Contract_page
 
-	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+	db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
 		panic(err)
 	}
@@ -662,7 +661,7 @@ func new_contract_page(w http.ResponseWriter, r *http.Request) {
 		log.Println("price", r.FormValue("price"), "amount", new_contract_table.Amount, "deadline", new_contract_table.Deadline)
 		new_contract_table.Amount = strconv.Itoa(check * check2)
 		log.Println("price", r.FormValue("price"), "amount", new_contract_table.Amount, "deadline", new_contract_table.Deadline)
-		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/agencydb")
+		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 		if err != nil {
 			panic(err)
 		}
