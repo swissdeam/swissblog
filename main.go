@@ -401,7 +401,7 @@ func choosen_request_page(w http.ResponseWriter, r *http.Request) {
 	var request Request
 	for res.Next() {
 
-		err = res.Scan(&request.Id, &request.Name, &request.Content, &request.Timestamp, &request.Theme_id, &request.Advertisers_id)
+		err = res.Scan(&request.Id, &request.Advertisers_id, &request.Theme_id, &request.Name, &request.Content, &request.Timestamp)
 		if err != nil {
 			panic(err)
 		}
