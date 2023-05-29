@@ -145,12 +145,13 @@ func requests_page(w http.ResponseWriter, r *http.Request) {
 	feed := []Request{}
 	for res.Next() {
 		var request Request
-		err = res.Scan(&request.Id, &request.Name, &request.Content, &request.Timestamp, &request.Theme_id, &request.Advertisers_id)
+		err = res.Scan(&request.Id, &request.Advertisers_id, &request.Theme_id, &request.Name, &request.Content, &request.Timestamp)
 		if err != nil {
 			panic(err)
 		}
 		feed = append(feed, request)
 	}
+
 	tmpl, _ := template.ParseFiles("src/requests_page.html")
 	tmpl.Execute(w, feed)
 }
