@@ -450,7 +450,7 @@ func relevant_page(w http.ResponseWriter, r *http.Request) {
 			var magazine Magazine
 			magazine.P = int_request
 			magazine.P2 = int_id
-			err = res.Scan(&magazine.Id, &magazine.Name, &magazine.Email, &magazine.Tel, &magazine.Price)
+			err = res.Scan(&magazine.Id, &magazine.Name, &magazine.Tel, &magazine.Email, &magazine.Price)
 			if err != nil {
 				panic(err)
 			}
