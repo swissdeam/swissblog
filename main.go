@@ -32,6 +32,17 @@ type Request struct {
 	Advertisers_id int
 }
 
+type RequestShow struct {
+	Id              int    `json:"id"`
+	Name            string `json:"name`
+	Content         string `json:"content"`
+	Timestamp       string `json:"timestamp"`
+	Theme_id        int
+	Advertisers_id  int
+	Advertiser_Name string
+	Theme_name      string
+}
+
 type Contract_table struct {
 	Id           int    `json:"id"`
 	Timestamp    string `json:"timestamp"`
@@ -142,18 +153,45 @@ func requests_page(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	feed := []Request{}
+	feed := []RequestShow{}
 	for res.Next() {
-		var request Request
+		var request RequestShow
 		err = res.Scan(&request.Id, &request.Advertisers_id, &request.Theme_id, &request.Name, &request.Content, &request.Timestamp)
 		if err != nil {
 			panic(err)
+		}
+		ad_res, err := db.Query(fmt.Sprintf("SELECT name FROM `advertisers` where id = %d", request.Advertisers_id))
+		if err != nil {
+			panic(err)
+		}
+
+		for ad_res.Next() {
+
+			err = ad_res.Scan(&request.Advertiser_Name)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		th_res, err := db.Query(fmt.Sprintf("SELECT name FROM `themes` WHERE id = %d", request.Theme_id))
+		if err != nil {
+			panic(err)
+		}
+
+		for th_res.Next() {
+
+			err = th_res.Scan(&request.Theme_name)
+			if err != nil {
+				panic(err)
+			}
+
 		}
 		feed = append(feed, request)
 	}
 
 	tmpl, _ := template.ParseFiles("src/requests_page.html")
 	tmpl.Execute(w, feed)
+
 }
 
 func contracts_page(w http.ResponseWriter, r *http.Request) {
@@ -565,6 +603,8 @@ func new_contract_page(w http.ResponseWriter, r *http.Request) {
 		// check2 := new_contract_table.Duration
 		if new_contract_table.Duration != 0 {
 			new_contract_table.Amount = new_contract_table.Amount * new_contract_table.Duration
+		} else {
+			new_contract_table.Duration = 1
 		}
 
 		log.Println("price", r.FormValue("price"), "amount", new_contract_table.Amount, "duration", new_contract_table.Duration)
