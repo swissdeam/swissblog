@@ -39,7 +39,7 @@ type Contract_table struct {
 	Request_id   int
 	Magazines_id int
 	Amount       int
-	Editorial    bool
+	Editorial    int
 }
 
 type Contract_page struct {
@@ -58,7 +58,7 @@ type Contract_page struct {
 	Magazine_tel      string
 	Magazine_price    int
 	Amount            int
-	Editorial         bool
+	Editorial         int
 }
 
 type Advertiser struct {
@@ -174,7 +174,7 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 	storage := []Contract_table{}
 	for res.Next() {
 		var contract Contract_table
-		err = res.Scan(&contract.Id, &contract.Timestamp, &contract.Duration, &contract.Request_id, &contract.Magazines_id, &contract.Amount)
+		err = res.Scan(&contract.Id, &contract.Request_id, &contract.Magazines_id, &contract.Amount, &contract.Duration, &contract.Timestamp, &contract.Editorial)
 		if err != nil {
 			panic(err)
 		}
@@ -187,6 +187,7 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 		list.Id = contract.Id
 		list.Timestamp = contract.Timestamp
 		list.Amount = contract.Amount
+		list.Editorial = contract.Editorial
 
 		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 		if err != nil {
@@ -201,7 +202,7 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 		}
 		for req_res.Next() {
 			var request Request
-			err = req_res.Scan(&request.Id, &request.Name, &request.Content, &request.Timestamp, &request.Theme_id, &request.Advertisers_id)
+			err = req_res.Scan(&request.Id, &request.Advertisers_id, &request.Theme_id, &request.Name, &request.Content, &request.Timestamp)
 			if err != nil {
 				panic(err)
 			}
@@ -227,6 +228,22 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 				list.Advertisers_email = advertiser.Email
 
 			}
+
+			th_res, err := db.Query(fmt.Sprintf("SELECT * FROM `themes` WHERE id = %d", request.Theme_id))
+			if err != nil {
+				panic(err)
+			}
+
+			for th_res.Next() {
+				var theme Themes
+
+				err = th_res.Scan(&theme.Id, &theme.Name)
+				if err != nil {
+					panic(err)
+				}
+				list.Theme_name = theme.Name
+
+			}
 		}
 
 		// ad_res, err := db.Query(fmt.Sprintf("SELECT * FROM `advertisers` WHERE id = %d", contract.Advertisers_id))
@@ -240,7 +257,7 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 		for mag_res.Next() {
 
 			var magazine Magazine
-			err = mag_res.Scan(&magazine.Id, &magazine.Name, &magazine.Email, &magazine.Tel, &magazine.Price)
+			err = mag_res.Scan(&magazine.Id, &magazine.Name, &magazine.Tel, &magazine.Email, &magazine.Price)
 			if err != nil {
 				panic(err)
 			}
@@ -311,8 +328,7 @@ func new_requests_page(w http.ResponseWriter, r *http.Request) {
 		for i, abc := range themes_names {
 			log.Println("в цикле", i, abc, new_request.Theme_id)
 			if abc.Name == r.FormValue("theme") {
-				new_request.Theme_id = i
-
+				new_request.Theme_id = i + 1
 			}
 			log.Println("после условия цикле", i, abc, new_request.Theme_id)
 		}
@@ -321,7 +337,6 @@ func new_requests_page(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		log.Println("check1")
 		defer db.Close()
 
 		insert, err := db.Query(fmt.Sprintf("INSERT INTO `requests` (`name`, `content`, `timestamp`,`themes_id`, `advertisers_id`)  VALUES( '%s','%s','%s','%d','%d')", new_request.Name, new_request.Content, new_request.Timestamp, new_request.Theme_id, new_request.Advertisers_id))
@@ -489,7 +504,7 @@ func new_contract_page(w http.ResponseWriter, r *http.Request) {
 	}
 	for req_res.Next() {
 
-		err = req_res.Scan(&request.Id, &request.Name, &request.Content, &request.Timestamp, &request.Theme_id, &request.Advertisers_id)
+		err = req_res.Scan(&request.Id, &request.Advertisers_id, &request.Theme_id, &request.Name, &request.Content, &request.Timestamp)
 		if err != nil {
 			panic(err)
 		}
@@ -501,7 +516,7 @@ func new_contract_page(w http.ResponseWriter, r *http.Request) {
 	}
 	for mag_res.Next() {
 
-		err = mag_res.Scan(&magazine.Id, &magazine.Name, &magazine.Email, &magazine.Tel, &magazine.Price)
+		err = mag_res.Scan(&magazine.Id, &magazine.Name, &magazine.Tel, &magazine.Email, &magazine.Price)
 		if err != nil {
 			panic(err)
 		}
@@ -540,18 +555,28 @@ func new_contract_page(w http.ResponseWriter, r *http.Request) {
 		}
 		var new_contract_table Contract_table
 		new_contract_table.Timestamp = time.Now().Format("2006-01-02 15:04:05")
-		new_contract_table.Duration, _ = strconv.Atoi(r.FormValue("deadline"))
+		new_contract_table.Duration, _ = strconv.Atoi(r.FormValue("duration"))
 		new_contract_table.Amount, _ = strconv.Atoi(r.FormValue("amount"))
 		new_contract_table.Request_id = request.Id
 		new_contract_table.Magazines_id = magazine.Id
-		show.Duration, _ = strconv.Atoi(r.FormValue("deadline"))
-		show.Amount, _ = strconv.Atoi(r.FormValue("amount"))
+		// show.Duration, _ = strconv.Atoi(r.FormValue("duration"))
+		// show.Amount, _ = strconv.Atoi(r.FormValue("amount"))
+		// check, _ := strconv.Atoi(r.FormValue("price"))
+		// check2 := new_contract_table.Duration
+		if new_contract_table.Duration != 0 {
+			new_contract_table.Amount = new_contract_table.Amount * new_contract_table.Duration
+		}
 
-		check := new_contract_table.Amount
-		check2 := new_contract_table.Duration
-		log.Println("price", r.FormValue("price"), "amount", new_contract_table.Amount, "deadline", new_contract_table.Duration)
-		new_contract_table.Amount = check * check2
-		log.Println("price", r.FormValue("price"), "amount", new_contract_table.Amount, "deadline", new_contract_table.Duration)
+		log.Println("price", r.FormValue("price"), "amount", new_contract_table.Amount, "duration", new_contract_table.Duration)
+
+		log.Println("price", r.FormValue("price"), "amount", new_contract_table.Amount, "duration", new_contract_table.Duration)
+
+		if r.FormValue("editorial") == "on" {
+			new_contract_table.Editorial = 1
+			new_contract_table.Amount += 2000
+		} else {
+			new_contract_table.Editorial = 0
+		}
 
 		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
 		if err != nil {
@@ -560,7 +585,7 @@ func new_contract_page(w http.ResponseWriter, r *http.Request) {
 
 		defer db.Close()
 
-		insert, err := db.Query(fmt.Sprintf("INSERT INTO `contracts` (`timestamp`, `duration`, `requests_id`,`magazines_id`, `amount`) VALUES( '%s','%d','%d','%d','%d')", new_contract_table.Timestamp, new_contract_table.Duration, new_contract_table.Request_id, new_contract_table.Magazines_id, new_contract_table.Amount))
+		insert, err := db.Query(fmt.Sprintf("INSERT INTO `contracts` (`timestamp`, `duration`, `requests_id`,`magazines_id`, `amount`, `editorial`) VALUES( '%s','%d','%d','%d','%d','%d')", new_contract_table.Timestamp, new_contract_table.Duration, new_contract_table.Request_id, new_contract_table.Magazines_id, new_contract_table.Amount, new_contract_table.Editorial))
 		if err != nil {
 			panic(err)
 		}
