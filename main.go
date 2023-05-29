@@ -62,12 +62,10 @@ type Contract_page struct {
 }
 
 type Advertiser struct {
-	Id       int    `json:"id"`
-	Name     string `json:"name"`
-	Tel      string `json:"tel"`
-	Email    string `json:"email"`
-	Position string `json:"position"`
-	Address  string `json:"address"`
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	Tel   string `json:"tel"`
+	Email string `json:"email"`
 }
 
 type Themes struct {
@@ -99,7 +97,7 @@ func advertisers_page(w http.ResponseWriter, r *http.Request) {
 	advertisers := []Advertiser{}
 	for res.Next() {
 		var advertiser Advertiser
-		err = res.Scan(&advertiser.Id, &advertiser.Name, &advertiser.Tel, &advertiser.Email, &advertiser.Position, &advertiser.Address)
+		err = res.Scan(&advertiser.Id, &advertiser.Name, &advertiser.Tel, &advertiser.Email)
 		if err != nil {
 			panic(err)
 		}
@@ -219,7 +217,7 @@ func contracts_page(w http.ResponseWriter, r *http.Request) {
 			for ad_res.Next() {
 				var advertiser Advertiser
 
-				err = ad_res.Scan(&advertiser.Id, &advertiser.Name, &advertiser.Tel, &advertiser.Email, &advertiser.Position, &advertiser.Address)
+				err = ad_res.Scan(&advertiser.Id, &advertiser.Name, &advertiser.Tel, &advertiser.Email)
 				if err != nil {
 					panic(err)
 				}
@@ -353,8 +351,6 @@ func new_advertiser_page(w http.ResponseWriter, r *http.Request) {
 		new_advertiser.Name = r.FormValue("name")
 		new_advertiser.Tel = r.FormValue("phone-number")
 		new_advertiser.Email = r.FormValue("email")
-		new_advertiser.Position = r.FormValue("position")
-		new_advertiser.Address = r.FormValue("address")
 		log.Println(new_advertiser, new_advertiser.Name, r.FormValue("name"))
 
 		db, err := sql.Open("mysql", "root:bitard671K-On@tcp(127.0.0.1:3306)/mydb")
@@ -364,7 +360,7 @@ func new_advertiser_page(w http.ResponseWriter, r *http.Request) {
 		log.Println("do bazi")
 		defer db.Close()
 		log.Println("posle bazi")
-		insert, err := db.Query(fmt.Sprintf("INSERT INTO `advertisers` (`name`, `tel`, `email`, `position`, `address`) VALUES( '%s','%s','%s','%s','%s')", new_advertiser.Name, new_advertiser.Tel, new_advertiser.Email, new_advertiser.Position, new_advertiser.Address))
+		insert, err := db.Query(fmt.Sprintf("INSERT INTO `advertisers` (`name`, `tel`, `email`) VALUES( '%s','%s','%s')", new_advertiser.Name, new_advertiser.Tel, new_advertiser.Email))
 		if err != nil {
 			panic(err)
 		}
@@ -529,7 +525,7 @@ func new_contract_page(w http.ResponseWriter, r *http.Request) {
 
 	for ad_res.Next() {
 
-		err = ad_res.Scan(&advertiser.Id, &advertiser.Name, &advertiser.Tel, &advertiser.Email, &advertiser.Position, &advertiser.Address)
+		err = ad_res.Scan(&advertiser.Id, &advertiser.Name, &advertiser.Tel, &advertiser.Email)
 		if err != nil {
 			panic(err)
 		}
